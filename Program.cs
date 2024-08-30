@@ -13,8 +13,8 @@ namespace AheiDemo {
     class Program {
         public enum Sides
         {
-            TOP,
-            BOTTOM,
+            Top,
+            Bottom,
             NoConnection,
             ShortCircuit
 
@@ -37,7 +37,7 @@ namespace AheiDemo {
             using var button2 = cotask.createInputPin(Pins.IO6);
            
             cotask.run();
-            Thread.Sleep(100);
+            Thread.Sleep(10);
             var state1 = button1.getState();
             var state2 = button2.getState();
             Console.WriteLine($"{state1} {state2}");
@@ -49,13 +49,13 @@ namespace AheiDemo {
             }
             if (state1 == PinState.Low && state2 == PinState.High)
             {
-                Console.WriteLine("Side: TOP");
-                return Sides.TOP;
+                Console.WriteLine("Side: Top");
+                return Sides.Top;
             }
             if (state1 == PinState.High && state2 == PinState.Low)
             {
-                Console.WriteLine("Side: BOTTOM");
-                return Sides.BOTTOM;
+                Console.WriteLine("Side: Bottom");
+                return Sides.Bottom;
             }
             Console.WriteLine("No Connection");
             return Sides.NoConnection;
@@ -66,7 +66,7 @@ namespace AheiDemo {
             var iOPins = new IOPins();
             switch (side)
             {
-                case Sides.TOP:
+                case Sides.Top:
                     iOPins.STATUS1 = Pins.IO6;
                     iOPins.STATUS2 = Pins.IO1;
                     iOPins.FUNC1 = Pins.IO5;
@@ -75,7 +75,7 @@ namespace AheiDemo {
                     iOPins.V_AXIS = Pins.IOA3;
                     iOPins.CLICK = Pins.IO7;
                     break;
-                case Sides.BOTTOM:
+                case Sides.Bottom:
                     iOPins.STATUS1 = Pins.IO1;
                     iOPins.STATUS2 = Pins.IO6;
                     iOPins.FUNC1 = Pins.IO2;
@@ -84,8 +84,10 @@ namespace AheiDemo {
                     iOPins.V_AXIS = Pins.IOA4;
                     iOPins.CLICK = Pins.IO8;
                     break;
-                case Sides.NoConnection: break;
-                case Sides.ShortCircuit: break;
+                case Sides.NoConnection:
+                    throw new InvalidOperationException("Such connection is not supported.");
+                case Sides.ShortCircuit:
+                    throw new InvalidOperationException("Such connection is not supported.");
 
             }
             return iOPins;
@@ -94,22 +96,27 @@ namespace AheiDemo {
         static void Run (Antilatency.HardwareExtensionInterface.ICotask cotask, IOPins conf) {
             using var ledRed = cotask.createPwmPin(conf.STATUS1, 1000, 0f);
             using var ledGreen = cotask.createOutputPin(conf.STATUS2, PinState.High);
-            using var Haxis = cotask.createAnalogPin(conf.H_AXIS, 10);
-            using var Vaxis = cotask.createAnalogPin(conf.V_AXIS, 10);
-            using var FUNC1 = cotask.createInputPin(conf.FUNC1);
-            using var FUNC2 = cotask.createInputPin(conf.FUNC2);
-            using var CLICK = cotask.createInputPin(conf.CLICK);
+            using var hAxis = cotask.createAnalogPin(conf.H_AXIS, 10);
+            using var vAxis = cotask.createAnalogPin(conf.V_AXIS, 10);
+            using var func1 = cotask.createInputPin(conf.FUNC1);
+            using var func2 = cotask.createInputPin(conf.FUNC2);
+            using var click = cotask.createInputPin(conf.CLICK);
          
             
             cotask.run();
             
             while (!cotask.isTaskFinished()) {
-                Console.WriteLine($"HAxis: {Math.Round(Haxis.getValue(),2), -5} VAxis {Math.Round(Vaxis.getValue(), 2), -5} FUNC1: {FUNC1.getState(), -5} FUNC2: {FUNC2.getState(),-5} CLICK: {CLICK.getState(),-5}");
+                Console.WriteLine("hAxis: {0,-5} vAxis {1,-5} func1: {2,-5} func2: {3,-5} click: {4,-5}",
+                   Math.Round(hAxis.getValue(), 2),
+                   Math.Round(vAxis.getValue(), 2),
+                   func1.getState(),
+                   func2.getState(),
+                   click.getState());
 
-                ledRed.setDuty(Haxis.getValue() * 0.4f);
+                ledRed.setDuty(hAxis.getValue() * 0.4f);
 
 
-                if (Vaxis.getValue() >= 2) {
+                if (vAxis.getValue() >= 2) {
                     ledGreen.setState(PinState.High);
                         }
                 else ledGreen.setState(PinState.Low);
